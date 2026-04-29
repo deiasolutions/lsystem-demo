@@ -5,6 +5,7 @@ authored_via: outside
 authority_level: convention
 collapsed_summary: Lindenmayer fractal plant — iteratively rewrite an axiom with two production rules, expand brackets to a flat absolute-coordinate command stream, render via the simdecisions turtledraw adapter.
 depends_on: []
+domain: lsystem-prism-decomposer
 expanded_into: null
 id: lsystem-fractal-plant
 kind: ir-node

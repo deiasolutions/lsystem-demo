@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Build artifacts
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test / coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Node / Playwright (browser-automation harness)
+node_modules/
+playwright-report/
+test-results/
+.playwright-cache/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json

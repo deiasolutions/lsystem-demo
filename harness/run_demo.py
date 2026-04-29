@@ -97,7 +97,7 @@ def _bootstrap_root_record(
         from eightos.sdk._runner import run as run_op
 
         try:
-            run_op("kernel.reindex", {})
+            run_op("kernel.reindex", {"mode": "full"})
             print("[bootstrap] kernel.reindex ok")
         except Exception as e:  # noqa: BLE001
             print(f"[bootstrap] kernel.reindex warning: {e}")

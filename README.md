@@ -8,7 +8,7 @@ This is **Demo #1 in the publish-track demo trio.** See the [8OS overview](https
 
 - **[PRISM-IR](https://github.com/deiasolutions/prism-ir)** — the source language. Declares the L-system rule-rewriting program: axiom, production rules, iteration count, bracket-expansion state machine, terminal turtle-command emission.
 - **[8OS](https://github.com/deiasolutions/8os)** — the kernel runtime. Hosts the program's execution as an (I, R) graph; resolvers dispatch each iteration; the kernel records lineage and resolution events.
-- **[simdecisions](https://github.com/deiasolutions/simdecisions)** turtledraw adapter — the rendering surface. A React/p5.js drawing-canvas EGG inside the shiftcenter pane host receives turtle commands and renders to a webpage canvas.
+- **[simdecisions](https://github.com/deiasolutions/simdecisions)** turtledraw adapter — the rendering surface. A React/p5.js drawing canvas inside the simdecisions test harness receives turtle commands and renders to a webpage canvas.
 
 None of the three systems were built knowing about the others as their primary use case. PRISM-IR is a general workflow language; 8OS is a general kernel; the turtledraw adapter is general drawing infrastructure for SimDecisions. The composition working at runtime is empirical evidence that the (I, R) primitive supports composition across systems built independently, on different timelines, for different primary purposes.
 
@@ -16,7 +16,7 @@ None of the three systems were built knowing about the others as their primary u
 
 This demo witnesses **composability under multi-system runtime composition** — that the (I, R) primitive carries enough architectural weight to bridge three independently-built systems at runtime.
 
-It does not witness PRISM-IR's coverage of the 43 Workflow Patterns (a separate formal claim made by the PRISM-IR project) or 8OS's eight-axiom kernel ABI (a structural claim of the 8OS project). Those are separate witnesses; this is the empirical one.
+It does not witness LLM mediation (Demo #2 / SCAN does that) or self-composition (Demo #3 / decomposition-strategy does that). It witnesses the bare composability claim — three independently-built systems meeting at the (I, R) joint.
 
 ## Pinned versions
 

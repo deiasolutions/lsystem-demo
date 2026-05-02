@@ -32,7 +32,16 @@ from eightos.factory.workload_helpers import (
 )
 
 _DEFAULT_URL = "http://localhost:5173/?set=turtle-draw"
-_DEFAULT_OUTPUT_NAME = "fractal-plant.png"
+_DEFAULT_OUTPUT_NAME = "koch-snowflake.png"
+
+
+def _output_filename() -> str:
+    """Per-program PNG name. Defaults to koch-snowflake.png when
+    LSYSTEM_PROGRAM is unset (matches run_demo.py's default program)."""
+    program = os.environ.get("LSYSTEM_PROGRAM")
+    if not program:
+        return _DEFAULT_OUTPUT_NAME
+    return f"{program}.png"
 
 # Threshold above which we chunk the command stream. Chosen empirically: most
 # browsers handle a ~50k-char paste into a controlled <input> cleanly; beyond
@@ -66,7 +75,7 @@ def resolve(intention_id: str) -> dict[str, Any]:
 
     output_dir = Path(os.environ.get("LSYSTEM_OUTPUT_DIR") or _default_output_dir())
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_png = output_dir / _DEFAULT_OUTPUT_NAME
+    output_png = output_dir / _output_filename()
 
     url = os.environ.get("SIMDECISIONS_URL") or _DEFAULT_URL
     headless = (os.environ.get("LSYSTEM_HEADLESS") or "true").lower() != "false"
@@ -127,34 +136,56 @@ def _render(
         page = browser.new_page(viewport={"width": 1280, "height": 1000})
         page.goto(url, wait_until="domcontentloaded")
         page.wait_for_selector("canvas", timeout=15000)
-        page.wait_for_selector("input.tdraw-input", timeout=10000)
+        # Wait for the canvas component to expose its programmatic API.
+        # `window.__lsystem.execute` is installed by DrawingCanvasApp on
+        # mount; this avoids the keypress/React-state path entirely.
+        page.wait_for_function(
+            "() => !!(window.__lsystem && typeof window.__lsystem.execute === 'function')",
+            timeout=15000,
+        )
+        # The shell mounts two DrawingCanvasApp instances (StrictMode-style
+        # double-mount; canvas count == 2 in the rendered DOM). Each
+        # instance registers its own window.__lsystem.execute on mount;
+        # the second-mounted one's effect runs last and is the one whose
+        # canvas the harness screenshots (canvas.last). Wait until both
+        # canvases have mounted so the second instance's execute is the
+        # one we drive — otherwise we draw on the first instance's canvas
+        # and screenshot the blank second instance.
+        page.wait_for_function(
+            "() => document.querySelectorAll('canvas').length >= 2",
+            timeout=15000,
+        )
+        # Small additional buffer to let the second instance's useEffect
+        # complete (registering window.__lsystem.execute) after both
+        # canvases mount.
+        page.wait_for_timeout(500)
         metrics["page_load_ms"] = (time.monotonic() - page_load_start) * 1000.0
 
-        input_loc = page.locator("input.tdraw-input")
         send_start = time.monotonic()
 
-        if len(flat_commands) <= _SINGLE_SHOT_MAX_CHARS:
-            input_loc.fill(flat_commands)
-            input_loc.press("Enter")
-            chunking_label = "single-shot"
-            chunk_count = 1
-        else:
-            chunks = _split_on_semicolons(flat_commands, _CHUNK_TARGET_CHARS)
-            for i, chunk in enumerate(chunks):
-                input_loc.fill(chunk)
-                input_loc.press("Enter")
-                if i < len(chunks) - 1:
-                    page.wait_for_timeout(_INTER_CHUNK_WAIT_MS)
-            chunking_label = f"chunked ({len(chunks)} chunks)"
-            chunk_count = len(chunks)
+        # Push the entire flat command stream through the window API in
+        # one call. The component runs commands in animation-frame
+        # batches; the promise resolves when the last batch completes.
+        executed = page.evaluate(
+            "(cmds) => window.__lsystem.execute(cmds)",
+            flat_commands,
+        )
+        chunking_label = f"window.__lsystem.execute ({executed} commands)"
+        chunk_count = 1
 
         metrics["send_ms"] = (time.monotonic() - send_start) * 1000.0
         metrics["chunk_count"] = chunk_count
+        metrics["commands_executed"] = executed
 
         page.wait_for_timeout(_FINAL_RENDER_WAIT_MS)
 
         screenshot_start = time.monotonic()
-        canvas = page.locator("canvas").first
+        # The shell renders two stacked canvas instances (likely StrictMode
+        # double-mount or a preview/active pair). Both register a
+        # window.__lsystem.execute, but the second-mounted one's effect
+        # runs last and is the one execute() drives. Screenshot the last
+        # canvas, not the first, to capture the actually-drawn pixels.
+        canvas = page.locator("canvas").last
         canvas.screenshot(path=str(output_png))
         metrics["screenshot_ms"] = (time.monotonic() - screenshot_start) * 1000.0
 

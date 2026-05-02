@@ -1,11 +1,11 @@
-# Lindenmayer fractal plant — empirical witness for (I, R) composability
+# Koch snowflake — empirical witness for (I, R) composability
 
-A working composition of three independently-built systems renders
-Lindenmayer's fractal plant: PRISM-IR declares the workflow, 8OS hosts
-its execution as an (Intention, Resolution) graph, and the simdecisions
-turtledraw adapter receives the terminal command stream and draws to a
-canvas. None of the three systems was built knowing about the others as
-a primary use case. The composition working at runtime is the
+A working composition of three independently-built systems renders a Koch
+snowflake (and a sibling bushy-tree L-system): PRISM-IR declares the
+workflow, 8OS hosts its execution as an (Intention, Resolution) graph, and
+the simdecisions turtledraw adapter receives the terminal command stream
+and draws to a canvas. None of the three systems was built knowing about
+the others as a primary use case. The composition working at runtime is the
 demonstration.
 
 ## Composing systems
@@ -24,11 +24,11 @@ No upstream changes were made to any of the three composing systems.
 ## The PRISM-IR program
 
 The program is a single PRISM-IR v1.1 Level-1 file at
-[`prism/lsystem-fractal-plant.prism.md`](../prism/lsystem-fractal-plant.prism.md):
+[`prism/koch-snowflake.prism.md`](../prism/koch-snowflake.prism.md):
 
 ```yaml
 v: 1.1.0
-prism: lsystem-fractal-plant
+prism: koch-snowflake
 conformance: level-1
 
 params:
@@ -104,7 +104,7 @@ implementation.
 ## The (I, R) graph
 
 The decomposer's graph spec, after unrolling six iterations, materializes
-nine kernel-hosted records under `8os/ir/lsystem/lsystem-fractal-plant.prism/`:
+nine kernel-hosted records under `8os/ir/lsystem/koch-snowflake.prism/`:
 
 ```
 _node.md                       (root, expanded after decomposition)
@@ -177,7 +177,7 @@ single-shot or chunked path was taken is logged in the resolver's
 
 ## Rendered output
 
-![Lindenmayer fractal plant](../output/fractal-plant.png)
+![Koch snowflake](../output/koch-snowflake.png)
 
 > _Image filled in from the published run; placeholder until Piece 4 completes._
 
@@ -225,7 +225,7 @@ git clone https://github.com/deiasolutions/simdecisions.git
 ```
 
 The harness writes the rendered PNG to
-`lsystem-demo/output/fractal-plant.png` and prints the per-tick trace
+`lsystem-demo/output/koch-snowflake.png` and prints the per-tick trace
 to stdout.
 
 ## Friction surfaced and fixed

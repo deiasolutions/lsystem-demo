@@ -3,11 +3,11 @@ authored_by: q88n
 authored_on: '2026-04-29T00:00:00.000Z'
 authored_via: outside
 authority_level: convention
-collapsed_summary: Lindenmayer fractal plant — iteratively rewrite an axiom with two production rules, expand brackets to a flat absolute-coordinate command stream, render via the simdecisions turtledraw adapter.
+collapsed_summary: Koch snowflake — iteratively rewrite the axiom F++F++F under the rule F → F-F++F-F to produce a Koch snowflake outline, then emit a flat command stream to the simdecisions turtledraw adapter.
 depends_on: []
 domain: lsystem-prism-decomposer
 expanded_into: null
-id: lsystem-fractal-plant
+id: koch-snowflake
 kind: ir-node
 parent: null
 projection_types:
@@ -29,19 +29,21 @@ visible_to:
 
 # Intention
 
-Lindenmayer's fractal plant, expressed as a PRISM-IR v1.1 Level-1 program for
-hosting in 8OS and rendering via the simdecisions turtledraw adapter. The
-8OS-hosted frontmatter `id` (above) and the PRISM-IR body `id` (below) match
-exactly per v1.1 identity discipline.
+A Koch snowflake, expressed as a PRISM-IR v1.1 Level-1 program for hosting in
+8OS and rendering via the simdecisions turtledraw adapter. The 8OS-hosted
+frontmatter `id` (above) and the PRISM-IR body `id` (below) match exactly per
+v1.1 identity discipline.
 
 The workflow is six structural phases: **seed** the system with the axiom;
 **apply rules** for one rewrite round; **iter check** routes back for the next
 round or forward when the iteration count is reached; **expand brackets**
-walks the bracketed string with an explicit (x, y, heading) stack and emits
-a flat absolute-coordinate command stream the adapter can consume directly
-(the adapter's grammar has no `[`/`]` — bracket semantics live in the
-workflow); **emit to canvas** transmits the flat command stream to the
-turtledraw adapter via Playwright; **end** terminates.
+walks the (in this program, bracket-less) string and emits a flat
+absolute-coordinate command stream the adapter can consume directly; **emit
+to canvas** transmits the flat command stream to the turtledraw adapter via
+Playwright; **end** terminates. The Koch snowflake's substitution rule
+contains no `[`/`]` brackets, so `expand_brackets` is effectively a
+pass-through — the same resolver handles bracketed L-systems (e.g., the
+sibling `bushy-tree` program) without modification.
 
 The composition under test is PRISM-IR + 8OS + simdecisions: the program here
 declares the workflow; 8OS hosts it as an (I, R) graph; simdecisions's
@@ -52,18 +54,18 @@ independently.
 
 ```yaml
 v: 1.1.0
-prism: lsystem-fractal-plant
+prism: koch-snowflake
 version: 1.1.0
 conformance: level-1
 
-id: lsystem-fractal-plant
-name: Lindenmayer fractal plant
-domain: lsystem/fractal-plant
+id: koch-snowflake
+name: Koch snowflake
+domain: lsystem/koch-snowflake
 intention: |
-  Render Lindenmayer's fractal plant by iteratively rewriting an axiom with
-  two production rules, expanding the resulting bracketed string into a flat
-  absolute-coordinate turtle command stream, and emitting that stream to a
-  turtledraw rendering surface.
+  Render a Koch snowflake by iteratively rewriting the axiom F++F++F under
+  the rule F → F-F++F-F at angle 60°, expanding the resulting string into a
+  flat absolute-coordinate turtle command stream, and emitting that stream
+  to a turtledraw rendering surface.
 
 failure_tolerance:
   apply_rules: retry
@@ -76,19 +78,18 @@ constraints:
     priority: low
 
 params:
-  axiom: "X"
+  axiom: "F++F++F"
   rules:
-    X: "F+[[X]-X]-F[-FX]+X"
-    F: "FF"
-  target_iterations: 6
-  angle_degrees: 25
-  forward_step_px: 4
-  start_x: 320
-  start_y: 700
-  start_heading_degrees: -90
-  pen_color: { r: 14, g: 90, b: 26 }
+    F: "F-F++F-F"
+  target_iterations: 4
+  angle_degrees: 60
+  forward_step_px: 7
+  start_x: 357
+  start_y: 614
+  start_heading_degrees: 0
+  pen_color: { r: 120, g: 220, b: 140 }
   pen_width: 1
-  background_color: { r: 240, g: 240, b: 230 }
+  background_color: { r: 14, g: 10, b: 26 }
 
 entities:
   - id: lstate
@@ -157,16 +158,17 @@ resolver internals.
   around the move; pendown after). `F` emits `forward step`; `+` and `-`
   emit `right θ` and `left θ`. The result is a semicolon-separated string
   of flat commands the adapter can execute.
-- **`lsystem-emit-to-canvas`** — invoke the Playwright harness:
-  fill `input.tdraw-input` at `localhost:5173/?set=turtle-draw` with
-  `lstate.flat_commands`, capture the canvas, write the PNG to
-  `output/fractal-plant.png`. Chunked sends if the command string exceeds
-  the input field's tolerated paste length.
+- **`lsystem-emit-to-canvas`** — invoke the Playwright harness: navigate
+  to the turtle-draw set at `localhost:5173/?set=lsystem-canvas`, push
+  `lstate.flat_commands` through `window.__lsystem.execute()` (a
+  programmatic API the canvas component exposes specifically for batch
+  drivers — bypasses the keypress / React-state path), capture the canvas,
+  write the PNG to `output/koch-snowflake.png`.
 
 ## Hosting note
 
 The 8OS frontmatter at the top of this file presumes the file is mirrored
-into the host 8OS repo at `8os/ir/lsystem/lsystem-fractal-plant.prism.md`
+into the host 8OS repo at `8os/ir/lsystem/koch-snowflake.prism.md`
 when the demo runs. The lsystem-demo repo is the canonical authoring
 location; the deterministic translator (`harness/prism_to_ir.py`) imports
 this file into 8OS and materializes the seven nodes above as (I, R) records

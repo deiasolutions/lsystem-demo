@@ -12,6 +12,14 @@ Configuration via env (all optional):
     SIMDECISIONS_URL   — turtle-draw EGG URL (default: localhost:5173/?set=turtle-draw)
     LSYSTEM_OUTPUT_DIR — where to write the rendered PNG
     LSYSTEM_HEADLESS   — "true" (default) or "false"
+    LSYSTEM_PROGRAM    — name of the PRISM-IR program (without .prism.md
+                         suffix). Default `koch-snowflake`. The harness
+                         reads `prism/<name>.prism.md`, installs it at
+                         `ir/lsystem/<name>.prism.md` in the 8OS repo,
+                         and writes the render to `output/<name>.png`.
+                         Available programs: `koch-snowflake` (default,
+                         pristine geometric fractal), `bushy-tree`
+                         (bracketed L-system, branching foliage).
 
 Prerequisite: the simdecisions Vite dev server must be running. From
 that repo: `cd browser && npm install && npm run dev`. The dev server
@@ -59,6 +67,10 @@ def main() -> int:
         return 3
 
 
+def _program_name() -> str:
+    return os.environ.get("LSYSTEM_PROGRAM") or "koch-snowflake"
+
+
 def _resolve_paths() -> tuple[Path, Path, Path]:
     here = Path(__file__).resolve()
     demo_dir = here.parent.parent  # lsystem-demo/
@@ -66,8 +78,9 @@ def _resolve_paths() -> tuple[Path, Path, Path]:
     eightos_repo = Path(
         os.environ.get("EIGHTOS_REPO") or default_8os
     ).resolve()
-    prism_source = demo_dir / "prism" / "lsystem-fractal-plant.prism.md"
-    prism_dest = eightos_repo / "ir" / "lsystem" / "lsystem-fractal-plant.prism.md"
+    program = _program_name()
+    prism_source = demo_dir / "prism" / f"{program}.prism.md"
+    prism_dest = eightos_repo / "ir" / "lsystem" / f"{program}.prism.md"
     return eightos_repo, prism_source, prism_dest
 
 
@@ -76,7 +89,7 @@ def _output_path() -> Path:
     demo_dir = here.parent.parent
     return Path(
         os.environ.get("LSYSTEM_OUTPUT_DIR") or (demo_dir / "output")
-    ).resolve() / "fractal-plant.png"
+    ).resolve() / f"{_program_name()}.png"
 
 
 def _bootstrap_root_record(

@@ -184,6 +184,20 @@ def _decompose(program: dict[str, Any]) -> dict[str, Any]:
             deps = _deps_for(node["id"], forward_edges, nodes_by_id)
         spec_nodes.append(_make_spec_node(node, deps))
 
+    # Namespace every node_id with the program's id so multiple programs
+    # can coexist in the same 8OS scope without colliding (snowflake's
+    # `seed`, `apply_rules-iter-0`, ... vs bushy-tree's same names). The
+    # `prism_operator.resolver` field is unchanged — resolvers are global
+    # and dispatched per-record by name; only the (I, R) ids are namespaced.
+    program_id = program.get("id") or program.get("prism")
+    if program_id:
+        prefix = f"{program_id}-"
+        for spec in spec_nodes:
+            spec["node_id"] = prefix + spec["node_id"]
+            spec["depends_on"] = [
+                prefix + d for d in (spec.get("depends_on") or [])
+            ]
+
     return {"nodes": spec_nodes}
 
 
